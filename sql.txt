@@ -1,0 +1,55 @@
+CREATE TABLE courses_series (
+    series_id uuid primary key default gen_random_uuid(),
+    unique_id text,  -- 用于查找，如BV号
+    pic text,  -- 封面的url
+    title text NOT NULL,  -- 系列课程的标题
+    description text,  -- 系列课程的描述
+    source text,  -- 来源
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+CREATE TABLE course_parts (
+    part_id uuid primary key default gen_random_uuid(),  -- 分p课程的唯一标识符
+    series_id uuid references series_courses(series_id) on delete cascade,  -- 关联到系列课程
+    title text NOT NULL,  -- 分p课程的标题
+    page int2,  -- 分P号
+    subtitle text,  -- 字幕
+    default_note text,  -- 默认笔记,
+    status int2,  -- 本地状态（0:未下载、1:正在下载、2:已下载）
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+CREATE TABLE notes (
+    note_id bigint primary key generated always as identity,
+    user_id uuid references auth.users(id),  -- 使用 uuid 类型并引用 auth.users(id)
+    part_id uuid references course_parts(part_id) on delete cascade,  -- 关联到分p课程
+    content text,  -- 笔记内容
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+CREATE TABLE quiz (
+    quiz_id bigint primary key generated always as identity,
+    part_id uuid references course_parts(part_id) on delete cascade,  -- 关联到分p课程
+    question_text text,  -- 题目文本
+    answer_options text,  -- 选项（如果有）
+    correct_answer text,  -- 正确答案
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+CREATE TABLE user_watching_history (
+    history_id bigint primary key generated always as identity,
+    user_id uuid references auth.users(id),  -- 用户ID
+    part_id uuid references course_parts(part_id) on delete cascade,  -- 分p课程ID
+    watched_at timestamp with time zone default now(),  -- 观看时间
+    progress float,  -- 观看进度（0到1之间的浮点数，表示完成百分比）
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+CREATE TABLE user_favorites (
+    favorite_id bigint primary key generated always as identity,
+    user_id uuid references auth.users(id),  -- 用户ID
+    series_id uuid references series_courses(series_id) on delete cascade,  -- 关联到系列课程
+    favorited_at timestamp with time zone default now(),  -- 收藏时间
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
